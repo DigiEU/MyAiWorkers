@@ -7,7 +7,11 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@digitaleu/shared": ["../scannerandextention/packages/shared/src/index.ts"]
+    }
   },
   "include": ["src/**/*.ts"]
 }

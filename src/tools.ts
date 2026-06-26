@@ -5,6 +5,7 @@ import { readFile, writeFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { Type, type FunctionDeclaration } from "@google/genai";
+import { getOptOutInstructions } from "@digitaleu/shared";
 
 const pexec = promisify(execFile);
 const MAX_READ_CHARS = 120_000;
@@ -237,6 +238,12 @@ export async function executeTool(
         });
         const combined = [stdout, stderr].filter(Boolean).join("\n").trim();
         return { ok: true, output: clip(combined || "(no output)") };
+      }
+      case "read_opt_out_guide": {
+        const query = String(args.query || "");
+        const brokerName = String(args.broker_name || "");
+        const output = await getOptOutInstructions(query, brokerName);
+        return { ok: true, output: clip(output, MAX_READ_CHARS) };
       }
       default:
         return { ok: false, output: `Unknown tool: ${name}` };
