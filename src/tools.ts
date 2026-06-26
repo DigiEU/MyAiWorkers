@@ -100,6 +100,29 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
       required: ["command"],
     },
   },
+  {
+    name: "run_tests",
+    description: "Run tests in the project. Runs 'npm test' by default if no command is specified.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        test_command: { type: Type.STRING, description: "Specific test command to run (e.g. npm run test:web)" },
+      },
+    },
+  },
+  {
+    name: "query_supabase",
+    description: "Fetch data from a specific Supabase table using the REST API.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        table: { type: Type.STRING, description: "Name of the Supabase table" },
+        filters: { type: Type.OBJECT, description: "Object with key/value pairs for filtering. String values are treated as 'ilike' (contains), others as 'eq'." },
+        select: { type: Type.STRING, description: "Columns to select (e.g. 'id, name', default is '*')" },
+      },
+      required: ["table"],
+    },
+  },
 ];
 
 function resolveInWorktree(worktree: string, relPath: string): string {
@@ -237,6 +260,70 @@ export async function executeTool(
         });
         const combined = [stdout, stderr].filter(Boolean).join("\n").trim();
         return { ok: true, output: clip(combined || "(no output)") };
+      }
+      case "run_tests": {
+        const command = args.test_command ? String(args.test_command) : "npm test";
+        assertSafeCommand(command);
+        try {
+          const { stdout, stderr } = await pexec("/bin/bash", ["-lc", command], {
+            cwd: worktree,
+            maxBuffer: 1024 * 1024 * 8,
+            timeout: MAX_TERMINAL_MS,
+            env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
+          });
+          const combined = [stdout, stderr].filter(Boolean).join("\n").trim();
+          return { ok: true, output: clip(combined || "(no output)") };
+        } catch (e: any) {
+          const combined = [e.stdout, e.stderr, e.message].filter(Boolean).join("\n").trim();
+          return { ok: false, output: clip(combined || "Test execution failed") };
+        }
+      }
+      case "query_supabase": {
+        const url = process.env.SUPABASE_URL;
+        const key = process.env.SUPABASE_ANON_KEY;
+        if (!url || !key) {
+          return { ok: false, output: "SUPABASE_URL and SUPABASE_ANON_KEY environment variables are required." };
+        }
+
+        const table = String(args.table);
+        const select = args.select ? String(args.select) : "*";
+        const filters = args.filters as Record<string, unknown> | undefined;
+
+        const queryParams = new URLSearchParams();
+        queryParams.append("select", select);
+
+        if (filters) {
+          for (const [k, v] of Object.entries(filters)) {
+            if (typeof v === "string") {
+              queryParams.append(k, `ilike.%${v}%`);
+            } else {
+              queryParams.append(k, `eq.${v}`);
+            }
+          }
+        }
+
+        const fetchUrl = `${url}/rest/v1/${table}?${queryParams.toString()}`;
+        
+        try {
+          const response = await fetch(fetchUrl, {
+            headers: {
+              "apikey": key,
+              "Authorization": `Bearer ${key}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!response.ok) {
+            const errText = await response.text();
+            return { ok: false, output: `Supabase API error: ${response.status} ${response.statusText} - ${errText}` };
+          }
+
+          const data = await response.json();
+          return { ok: true, output: clip(JSON.stringify(data, null, 2)) };
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          return { ok: false, output: `Fetch error: ${msg}` };
+        }
       }
       default:
         return { ok: false, output: `Unknown tool: ${name}` };
