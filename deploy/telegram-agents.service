@@ -1,0 +1,29 @@
+# systemd-enhet for Telegram-agentene. Installeres som
+# /etc/systemd/system/telegram-agents.service på Hetzner-VM-en.
+[Unit]
+Description=digitaleu.me Telegram AI agents (Layer 2)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=agents
+WorkingDirectory=/home/agents/DigitalEU/tools/telegram-agents
+# Hemmeligheter ligger UTENFOR repo-klonen (spec §6 regel #2).
+Environment=BOTS_ENV_FILE=/home/agents/digitaleu-bots.env
+ExecStart=/usr/bin/npm start
+Restart=on-failure
+RestartSec=5
+
+# Herding
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectControlGroups=true
+ProtectKernelTunables=true
+# Agentene må kunne skrive worktrees + ~/.claude under hjemmemappen.
+ReadWritePaths=/home/agents
+ProtectHome=false
+
+[Install]
+WantedBy=multi-user.target
