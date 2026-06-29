@@ -8,9 +8,10 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=agents
-WorkingDirectory=/home/agents/DigitalEU/tools/telegram-agents
+WorkingDirectory=/home/agents/MyAiWorkers
 # Hemmeligheter ligger UTENFOR repo-klonen (spec §6 regel #2).
 Environment=BOTS_ENV_FILE=/home/agents/digitaleu-bots.env
+Environment=WORK_REPO_PATH=/home/agents/scannerandextention
 ExecStart=/usr/bin/npm start
 Restart=on-failure
 RestartSec=5
@@ -21,7 +22,7 @@ PrivateTmp=true
 ProtectSystem=strict
 ProtectControlGroups=true
 ProtectKernelTunables=true
-# Agentene må kunne skrive worktrees + ~/.claude under hjemmemappen.
+# Agentene må kunne skrive produkt-worktrees under hjemmemappen.
 ReadWritePaths=/home/agents
 ProtectHome=false
 

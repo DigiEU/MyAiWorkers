@@ -8,8 +8,9 @@ kommandoer, committe) i sitt eget git worktree.
 
 **To-repo-modell:**
 - Dette repoet = orchestrator + personas + deploy-kit (det VM-en *kjører*).
-- Agentene jobber på en separat klone av produktrepoet (`DigitalEU`), pekt ut via
-  `WORK_REPO_PATH`. Hver agent på branch `agent/<rolle>`, aldri `main`.
+- Agentene jobber på en separat klone av produktmonorepoet
+  (`DigiEU/scannerandextention`), pekt ut via `WORK_REPO_PATH`.
+  Hver agent på branch `agent/<rolle>`, aldri `main`.
 
 ## Forutsetninger
 - Node >= 20.

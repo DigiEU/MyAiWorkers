@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 # Kjøres som 'agents'-bruker PÅ VM-en, ETTER at deploy-nøkkelen er lagt til på
-# GitHub (med write) og main er beskyttet. Kloner repoet og installerer appen.
+# GitHub (med write) og main er beskyttet. Kloner AI Workers-appen, klargjør
+# produktrepoet agentene jobber i, og installerer appen.
 set -euo pipefail
 
-REPO_URL="git@github.com:hashtor2/DigitalEU.git"
-BRANCH="${1:-feat/telegram-agents}"
+APP_REPO_URL="${APP_REPO_URL:-git@github.com:DigiEU/MyAiWorkers.git}"
+WORK_REPO_URL="${WORK_REPO_URL:-git@github.com:DigiEU/scannerandextention.git}"
+APP_BRANCH="${1:-main}"
+WORK_BRANCH="${WORK_BRANCH:-main}"
+APP_DIR="$HOME/MyAiWorkers"
+WORK_DIR="$HOME/scannerandextention"
 
 cd "$HOME"
 
@@ -25,17 +30,26 @@ if [ ! -f "$HOME/.ssh/id_ed25519" ]; then
   exit 0
 fi
 
-if [ ! -d "$HOME/DigitalEU" ]; then
-  echo "==> kloner repo ($BRANCH)"
-  git clone --branch "$BRANCH" "$REPO_URL" "$HOME/DigitalEU"
+if [ ! -d "$APP_DIR" ]; then
+  echo "==> kloner AI Workers ($APP_BRANCH)"
+  git clone --branch "$APP_BRANCH" "$APP_REPO_URL" "$APP_DIR"
 else
-  echo "==> repo finnes; henter siste"
-  git -C "$HOME/DigitalEU" fetch origin "$BRANCH" && git -C "$HOME/DigitalEU" checkout "$BRANCH" && git -C "$HOME/DigitalEU" pull --ff-only
+  echo "==> AI Workers finnes; henter siste"
+  git -C "$APP_DIR" fetch origin "$APP_BRANCH" && git -C "$APP_DIR" checkout "$APP_BRANCH" && git -C "$APP_DIR" pull --ff-only
+fi
+
+if [ ! -d "$WORK_DIR" ]; then
+  echo "==> kloner produktrepo for agent-worktrees ($WORK_BRANCH)"
+  git clone --branch "$WORK_BRANCH" "$WORK_REPO_URL" "$WORK_DIR"
+else
+  echo "==> produktrepo finnes; henter siste"
+  git -C "$WORK_DIR" fetch origin "$WORK_BRANCH" && git -C "$WORK_DIR" checkout "$WORK_BRANCH" && git -C "$WORK_DIR" pull --ff-only
 fi
 
 echo "==> npm install"
-cd "$HOME/DigitalEU/tools/telegram-agents"
+cd "$APP_DIR"
 npm install
 
 echo "==> ferdig. Sørg for at ~/digitaleu-bots.env finnes (chmod 600) med:"
-echo "    OWNER_TELEGRAM_ID, BOT_0x_*-tokens og ANTHROPIC_API_KEY (sk-ant-...)"
+echo "    OWNER_TELEGRAM_ID, GEMINI_API_KEY (eller GOOGLE_API_KEY), BOT_0x_*-tokens"
+echo "    Sett også WORK_REPO_PATH=$WORK_DIR hvis du ikke bruker standardstien."

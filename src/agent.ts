@@ -22,7 +22,7 @@ function guardrails(agent: AgentDef): string {
       `${agent.branch}\`. Then surface a pull request against \`main\`: first try ` +
       "`gh pr create --base main --fill`; if gh is unavailable or unauthorized, " +
       "instead output the one-tap PR link " +
-      `\`https://github.com/hashtor2/DigitalEU/compare/main...${agent.branch}?expand=1\`. ` +
+      `\`https://github.com/DigiEU/scannerandextention/compare/main...${agent.branch}?expand=1\`. ` +
       "Put the PR (or PR link) at the TOP of your reply so the owner can review/merge from their phone.",
     "- If `git push` itself fails (e.g. missing auth), say so plainly — don't retry blindly.",
     "- Never run destructive commands (rm -rf, hard resets on shared refs, force-push).",

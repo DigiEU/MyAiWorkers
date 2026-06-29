@@ -1,18 +1,20 @@
 # Hetzner-deploy — runbook (Fase 3)
 
 Alltid-på drift av Telegram-agentene på en EU-VM (Hetzner 🇩🇪). Følger
-sikkerhetsmodellen i `docs/TELEGRAM_AGENTS.md` §6.
+sikkerhetsmodellen i `README.md`.
 
 **Server:** CX22 (2 vCPU, 4 GB), Ubuntu 24.04, Falkenstein (fsn1). ~€4/mnd.
-**Auth:** ekte `ANTHROPIC_API_KEY` (sk-ant-…) med spend-cap.
-**Repo:** klones via deploy-nøkkel med write; `main` beskyttes på GitHub.
+**Auth:** ekte `GEMINI_API_KEY` / `GOOGLE_API_KEY` med bruksgrenser.
+**Repo:** `DigiEU/MyAiWorkers` klones som app, og
+`DigiEU/scannerandextention` klones som agentenes arbeidsrepo. Begge via
+deploy-nøkkel med write; `main` beskyttes på GitHub.
 
 ## Steg
 
 ### 0. Det du skaffer
 - [ ] Hetzner Cloud **API-token** (read+write): Hetzner Console → prosjekt →
-      Security → API Tokens → Generate. Lim til Claude når du blir bedt om det.
-- [ ] `ANTHROPIC_API_KEY` (sk-ant-…) med månedlig spend-cap satt.
+      Security → API Tokens → Generate. Lim til agenten når du blir bedt om det.
+- [ ] `GEMINI_API_KEY` (eller `GOOGLE_API_KEY`) med bruksgrenser satt.
 
 ### 1. Server (skriptet via Hetzner API)
 - Last opp en SSH-nøkkel for VM-tilgang.
@@ -38,15 +40,17 @@ Skriver ut en ed25519 public key. **Du:** legg den til på GitHub
 ```bash
 ssh agents@<IP> 'bash -s' < deploy/setup-app.sh   # andre kjøring kloner + npm install
 ```
-Opprett hemmelighetsfilen UTENFOR klonen (chmod 600):
+Andre kjøring kloner `DigiEU/MyAiWorkers` til `~/MyAiWorkers`, kloner
+`DigiEU/scannerandextention` til `~/scannerandextention`, og kjører
+`npm install` i appen. Opprett hemmelighetsfilen UTENFOR klonen (chmod 600):
 ```bash
 ssh agents@<IP> 'umask 077; cat > ~/digitaleu-bots.env' <<'EOF'
 OWNER_TELEGRAM_ID=539927333
+GEMINI_API_KEY=...
 BOT_01_CEO=...
 BOT_02_MARKETER=...
 BOT_03_WRITER=...
 BOT_04_DESIGNER=...
-ANTHROPIC_API_KEY=sk-ant-...
 EOF
 ```
 
@@ -69,4 +73,4 @@ Send melding til en bot fra mobilen. Den skal svare og jobbe på `agent/<rolle>`
 - [ ] Ingen prod-secrets / brukerdata i klonen (service_role, Stripe live, OAuth).
 - [ ] ufw aktiv: kun SSH inn.
 - [ ] Tokens rotert etter at de har vært limt i en chat.
-- [ ] Anthropic spend-cap satt.
+- [ ] Gemini-bruksgrenser og budsjettvarsler satt.

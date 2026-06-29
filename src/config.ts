@@ -1,7 +1,7 @@
 // Konfigurasjon for "My AI Workers".
 // To-repo-modell:
 //  - ORCH_ROOT  = dette repoet (orchestrator + personas).
-//  - WORK_REPO  = en separat klone av produktrepoet (DigitalEU) som agentene
+//  - WORK_REPO  = en separat klone av produktrepoet (scannerandextention) som agentene
 //                 faktisk jobber i, hver på sin egen worktree/branch.
 import os from "node:os";
 import path from "node:path";
@@ -16,7 +16,8 @@ export const ORCH_ROOT = path.resolve(__dirname, "..");
 export const PERSONA_DIR = path.join(ORCH_ROOT, "personas");
 
 export const WORK_REPO =
-  process.env.WORK_REPO_PATH || path.resolve(ORCH_ROOT, "..", "DigitalEU");
+  process.env.WORK_REPO_PATH ||
+  path.resolve(ORCH_ROOT, "..", "scannerandextention");
 
 export const WORKTREE_ROOT = path.resolve(
   WORK_REPO,
